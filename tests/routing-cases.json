@@ -1,0 +1,50 @@
+[
+  {
+    "id": "text-only",
+    "request": "制作一个8秒雨夜侦探视频，没有参考素材。",
+    "expected_sequence": [
+      "minimax-h3-creative-director",
+      "minimax-h3-text-video-prompt"
+    ]
+  },
+  {
+    "id": "ordinary-character-image",
+    "request": "让上传图片中的角色从废墟里站起来。",
+    "expected_sequence": [
+      "minimax-h3-creative-director",
+      "minimax-h3-reference-video-prompt"
+    ]
+  },
+  {
+    "id": "reference-image-with-opening-frame",
+    "request": "图片用于保持角色一致，也作为开场构图。",
+    "expected_sequence": [
+      "minimax-h3-creative-director",
+      "minimax-h3-reference-video-prompt"
+    ]
+  },
+  {
+    "id": "boundary-only-keyframes",
+    "request": "两张图只作为首尾帧，不承担任何人物、物品或风格参考。",
+    "expected_sequence": [
+      "minimax-h3-creative-director",
+      "minimax-h3-keyframe-video-prompt"
+    ]
+  },
+  {
+    "id": "explicit-multishot",
+    "request": "制作一个12秒三镜头视频并逐镜确认。",
+    "expected_sequence": [
+      "minimax-h3-creative-director",
+      "minimax-h3-multishot-planner"
+    ]
+  },
+  {
+    "id": "prompt-review",
+    "request": "检查并修复这段已有的H3提示词。",
+    "expected_sequence": [
+      "minimax-h3-creative-director",
+      "minimax-h3-prompt-reviewer"
+    ]
+  }
+]

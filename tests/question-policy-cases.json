@@ -1,0 +1,32 @@
+[
+  {
+    "id": "binary-multishot-choice",
+    "binary": true,
+    "options": [
+      "使用多镜头",
+      "保持单镜头"
+    ]
+  },
+  {
+    "id": "shot-count",
+    "binary": false,
+    "options": [
+      "2个镜头",
+      "3个镜头",
+      "4个镜头",
+      "5个镜头",
+      "6个镜头"
+    ]
+  },
+  {
+    "id": "camera-treatment",
+    "binary": false,
+    "options": [
+      "缓慢推进",
+      "横向跟拍",
+      "环绕主体",
+      "手持追随",
+      "固定机位"
+    ]
+  }
+]
