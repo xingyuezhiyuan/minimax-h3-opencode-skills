@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Prompt Reviewer"
+  short_description: "Audit and repair Seedance 2.0 prompts"
+  default_prompt: "Use $seedance-prompt-reviewer to check and fix my Seedance 2.0 prompt."

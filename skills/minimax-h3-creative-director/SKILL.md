@@ -1,15 +1,29 @@
 ---
 name: minimax-h3-creative-director
-description: "Primary mandatory entrypoint for every MiniMax H3 video-generation request. Use before any other H3 skill for creation, animation, extension, editing, restyling, reference, or prompt review. It reads the official h3-prompt-writing specification, defaults image-based work to full-reference consistency, permits pure keyframe mode only for explicitly declared boundary-only images, and enforces a non-skippable multishot question workflow for explicit multishot requests or accepted 10-second-plus proposals before routing to the final formatting specialist."
+description: "Mandatory platform-aware entrypoint for every video-generation request, routing to either MiniMax H3 or Seedance 2.0 (即梦). For MiniMax H3 it reads the official h3-prompt-writing specification, defaults image-based work to full-reference consistency, permits pure keyframe mode only for explicitly declared boundary-only images, and enforces a non-skippable multishot question workflow before routing to the matching H3 specialist. For Seedance it reads the shared seedance-prompt authority, applies Chinese 【风格】【时间轴】【声音】【参考】 routing, and enforces the 15-second gate with >15s 分段拼接, routing to the matching Seedance specialist."
 ---
 
-# MiniMax H3 Creative Director
+# Creative Director
 
-Act as the mandatory front door for MiniMax H3 work. Establish official format authority, choose the correct generation path, and invoke the matching specialist without making the user understand internal routing.
+Act as the mandatory front door for both MiniMax H3 and Seedance 2.0 (即梦) video-generation work. Resolve the target platform, establish the matching official format authority, choose the correct generation path, and invoke the matching specialist without making the user understand internal routing.
+
+## Platform Resolution
+
+Determine the target platform before drafting. The platform question is mandatory whenever the user has not actively named the platform:
+
+- Unmistakable Seedance intent (user actively names "seedance", "Seedance", "即梦", "即梦平台", ByteDance) -> target **Seedance**, do not ask.
+- Unmistakable H3 intent (user actively names "minimax", "MiniMax", "H3", "Minimax H3") -> target **H3**, do not ask.
+- A new text/story/asset video-generation request with no stated platform -> **ask one binary platform question first** (H3 vs Seedance) before any creative or routing work. Continue only after the user answers.
+- An existing prompt submitted for diagnosis or repair -> do not ask if the format is unambiguous: H3 three-field/six-section or `non_diegetic_music`/`integrated_multimodal_description` -> H3; Seedance `【风格】`/`【时间轴】`/`@图片N` -> Seedance. Only when the format cannot be detected, ask the binary platform question.
+- If the user declines to answer, delegates, or says "you decide" -> default to **H3** and disclose the assumption. This preserves backwards-compatible behavior.
+
+The platform question must be resolved before the Mandatory Official Read Order, because the authority files differ by platform. Keep platform-dependent limits, routing, and output contracts separate per the sections below.
 
 ## Mandatory Official Read Order
 
-Before analyzing or drafting any H3 prompt:
+The required authority depends on the resolved platform. Read the matching set before analyzing or drafting.
+
+### For H3
 
 1. Read `../h3-prompt-writing/SKILL.md` first.
 2. Inventory the request and supplied assets.
@@ -18,19 +32,38 @@ Before analyzing or drafting any H3 prompt:
 
 Treat the official `h3-prompt-writing` files as canonical for prompt syntax. Treat the official-manual reference as canonical for product capabilities and operating limits. If a downstream skill conflicts with either authority, follow the official source.
 
+### For Seedance
+
+1. Read `../seedance-prompt/SKILL.md` first.
+2. Read `../seedance-prompt/references/seedance-format.md` for platform limits, Chinese format, @引用 grammar, and the >15s 分段拼接 strategy.
+3. Inventory the request and supplied assets and validate against the Seedance envelope (≤9 images, ≤3 videos, ≤3 audio, ≤12 files; image/video/audio each reference-prohibits realistic human faces).
+
+Treat the `seedance-prompt` files as canonical for Seedance syntax, capabilities, and operating limits. If a downstream skill conflicts, follow the seedance-prompt authority.
+
 ## Routing Decision
 
-Choose exactly one final prompt-format specialist:
+Choose exactly one final prompt-format specialist for the resolved platform. The planning subskills and the shared multishot gate below apply to both platforms.
+
+### H3 routing
 
 - No reference assets, or text/script/storyboard only -> `minimax-h3-text-video-prompt`.
-- Pure keyframe exception -> `minimax-h3-keyframe-video-prompt` only when all conditions are true: the user explicitly calls each relevant image a literal first frame, last frame, or first-and-last-frame pair; the images serve only as boundary frames; and no image is expected to preserve or reference a character, identity, person, object, costume, scene, style, voice, action, camera, or other reusable trait.
+- Pure keyframe exception -> `minimax-h3-keyframe-video-prompt` only when all conditions are true: the user explicitly calls each relevant image a literal first frame, last frame, or first-and-last-frame pair; the images serve only as boundary frames; and no image preserves or references a character, identity, person, object, costume, scene, style, voice, action, camera, or other reusable trait.
 - Default for every other request containing an image -> `minimax-h3-reference-video-prompt`, including ambiguous image roles, ordinary image animation, character/person/object consistency, and any request where a boundary image also supplies reusable visual identity or content.
 - Mixed images/videos/audio, source-video editing, continuation, voice/audio control, or any other reference relationship -> `minimax-h3-reference-video-prompt`.
 - Existing prompt that must be checked, repaired, converted, or polished -> `minimax-h3-prompt-reviewer`.
 
-`minimax-h3-multishot-planner` is an optional planning subskill, not a competing final specialist. Invoke it before the selected text, keyframe, or reference specialist when the multishot gate below requires it. Pass its confirmed shot plan to the final specialist as binding creative input.
+### Seedance routing
 
-Apply reference-consistency priority. Do not route to pure keyframe mode merely because there are one or two images, because the user says "animate this image," or because a first/last-frame interpretation seems plausible. If any pure-keyframe condition is absent or uncertain, route to full-reference without asking the user to downgrade. Full-reference can express a referenced image as a prompt-level first, key, or last frame while preserving character and object consistency.
+- No reference assets, or text/script/storyboard only -> `seedance-text-video-prompt`.
+- Pure 首尾帧 keyframe -> `seedance-keyframe-video-prompt` only when the user explicitly declares the images as literal first/last frames with no other reusable reference role.
+- Any request with image/video/audio reference, including consistency (角色/产品/场景), 运镜/动作复刻, 创意模板/特效复刻, 音乐卡点, 首尾帧 with reusable traits, 视频延长, 视频编辑, or ambiguous asset role -> `seedance-reference-video-prompt`.
+- Existing prompt that must be checked, repaired, or polished -> `seedance-prompt-reviewer`.
+
+### Shared planning
+
+`minimax-h3-multishot-planner` is the shared planning subskill for both platforms, not a competing final specialist. Invoke it before the selected final specialist when the multishot gate below requires it. Pass its confirmed `multishot_plan` (which carries a `platform` field) to the matching final specialist as binding creative input. For Seedance, the planner also emits the >15s 分段拼接 structure when the effective duration exceeds 15 seconds.
+
+Apply reference-consistency priority on both platforms. Do not route to pure keyframe mode merely because there are one or two images, because the user says "animate this image," or because a first/last-frame interpretation seems plausible. If any pure-keyframe condition is absent or uncertain, route to full-reference. On Seedance, full-reference expresses first/last-frame semantics in the Chinese prompt (`@图片N 作为首帧/尾帧`) while preserving consistency.
 
 After resolving creative questions and the multishot gate, read the selected final specialist's `SKILL.md` and required references, then execute it in the same task flow. Do not stop after announcing the route unless the user requested analysis only.
 
@@ -80,7 +113,7 @@ When multishot is selected, enforce these states in order:
 4. `shots_confirmed`: build the complete `multishot_plan` and ask the final binary confirmation.
 5. `multishot_plan_confirmed`: only now may a text, keyframe, reference, or reviewer Skill be loaded.
 
-Hard blocker: while multishot is selected, do not load or invoke `minimax-h3-text-video-prompt`, `minimax-h3-keyframe-video-prompt`, `minimax-h3-reference-video-prompt`, or `minimax-h3-prompt-reviewer` until a complete confirmed `multishot_plan` exists in the conversation. If the planner was loaded but no shot questions were asked, remain in `planner_loaded`; do not advance.
+Hard blocker: while multishot is selected, do not load or invoke any final specialist — `minimax-h3-text-video-prompt`, `minimax-h3-keyframe-video-prompt`, `minimax-h3-reference-video-prompt`, `minimax-h3-prompt-reviewer`, `seedance-text-video-prompt`, `seedance-keyframe-video-prompt`, `seedance-reference-video-prompt`, or `seedance-prompt-reviewer` — until a complete confirmed `multishot_plan` exists in the conversation. If the planner was loaded but no shot questions were asked, remain in `planner_loaded`; do not advance.
 
 ## Creative Brief
 
@@ -96,6 +129,8 @@ Do not expose this internal brief unless it helps the user.
 
 ## Mandatory Gates
 
+### For H3
+
 - Keep the official online target within 4-15 seconds, 24 FPS, and 7000 prompt characters. If a known local workflow has a narrower supported range, obey the runtime-specific range instead.
 - Assign an explicit role to every important uploaded asset. Never write vague references such as "use all references."
 - In pure keyframe mode, state each explicitly declared boundary role. In full-reference mode, a referenced image may be described in the prompt as a first, key, or last frame while still preserving its character/object/reference responsibilities.
@@ -106,6 +141,20 @@ Do not expose this internal brief unless it helps the user.
 - Reject contradictions: one-take plus multiple cuts, music requested plus `non_diegetic_music: N/A`, face consistency without a usable identity reference, or excessive events for the duration.
 - H3 generates native stereo audio. Do not treat sound as an optional afterthought.
 
+### For Seedance
+
+- Keep generation within 4-15 seconds. When the effective duration exceeds 15 seconds, use 分段拼接: split into ≤15 s segments, first segment normal generation, every later segment begins with `将@视频1延长Xs` (X = added duration), and record a 衔接点 (entry/exit state) at every segment boundary.
+- Validate the Seedance envelope: ≤9 images, ≤3 videos, ≤3 audio, ≤12 files total; image/video/audio reference durations each ≤15 s. Never use 写实真人脸部 assets (rejected by the platform).
+- Assign an explicit `@图片N/@视频N/@音频N` role to every uploaded asset. Do not write vague references such as "use all references."
+- Express boundary frames in Chinese (`@图片N 作为首帧` / `@图片N 作为尾帧`), not H3 alignment tokens or `(Sx)`/`<d>` syntax.
+- Keep the timeline under ~300 words for reliable instruction following.
+- Preserve exact dialogue, lyrics, visible text, logos, and slogans verbatim.
+- Reject contradictions: 一镜到底 declared alongside multiple cuts, or a multishot plan that also claims one continuous take.
+
 ## Response Policy
 
-Return the specialist's copy-ready English prompt and complete Chinese translation. Keep routing commentary brief. Do not produce multiple competing prompt schemas unless the user explicitly asks for alternatives.
+Return output per the resolved platform:
+
+- **H3**: the specialist's copy-ready English prompt and a complete Chinese translation. Keep routing commentary brief.
+- **Seedance**: the specialist's copy-ready native-Chinese prompt in the official 【风格】【时间轴】【声音】【参考】 (or 【首帧】【尾帧】) format, plus short 素材建议/使用提示 if helpful. No mandatory English prompt or bilingual translation.
+- Never produce multiple competing prompt schemas unless the user explicitly asks for alternatives.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Reference Video Prompt"
+  short_description: "Create professional Seedance 2.0 full-reference prompts with @引用"
+  default_prompt: "Use $seedance-reference-video-prompt to turn my images/videos/audio into a professional Seedance 2.0 prompt."

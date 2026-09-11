@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Text Video Prompt"
+  short_description: "Create professional Seedance 2.0 text-to-video prompts"
+  default_prompt: "Use $seedance-text-video-prompt to turn my video idea into a professional Seedance 2.0 prompt."
